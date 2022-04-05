@@ -1,0 +1,27 @@
+for file in `cat list.txt`
+do
+    echo $file
+    cd $file
+cluster -i LFUG_coactivation.nii -t 0.5  >> FUG.txt
+cluster -i LIFG_coactivation.nii -t 0.5  >> IFG.txt
+cluster -i LIPL_coactivation.nii -t 0.5  >> IPL.txt
+cluster -i LITG_coactivation.nii -t 0.5  >> ITG.txt
+cluster -i LMTG_coactivation.nii -t 0.5  >> MTG.txt
+cluster -i LSTG_coactivation.nii -t 0.5  >> STG.txt
+cluster -i print_speech_co.nii -t 0.5  >> wholebrain.txt
+cat FUG.txt |awk '{sum+=$2} END {print sum}' >>SUMFUG.txt
+cat IFG.txt |awk '{sum+=$2} END {print sum}' >>SUMIFG.txt
+cat IPL.txt |awk '{sum+=$2} END {print sum}' >>SUMIPL.txt
+cat ITG.txt |awk '{sum+=$2} END {print sum}' >>SUMITG.txt
+cat MTG.txt |awk '{sum+=$2} END {print sum}' >>SUMMTG.txt
+cat STG.txt |awk '{sum+=$2} END {print sum}' >>SUMSTG.txt
+cat wholebrain.txt |awk '{sum+=$2} END {print sum}' >>SUMwhole.txt
+    cd ..
+done
+
+  cat wholebrain.txt |awk '{ split($2,myarr,",") 
+for (i in myarr)
+{ print myarr[i]} }'
+
+cat wholebrain.txt |awk '{sum+=$2} END {print "Sum = ", sum}' >>whole.txt
+cat wholebrain.txt |awk '{sum+=$2} END {print sum}' >>whole.txt
