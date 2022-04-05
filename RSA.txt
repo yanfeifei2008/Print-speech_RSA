@@ -1,0 +1,52 @@
+clear all;
+sub=importdata('list.txt');
+for i=1:length(sub)
+subm=char(sub{i});
+subm(find(isspace(subm))) = [];
+ config=cosmo_config();
+study_path='D:\dataforRSA';
+output_path='D:\dataforRSA_results';
+cosmo_check_external('-tic');
+data_path=fullfile(study_path,char(subm));
+mask_fn=fullfile('D:\dataforRSA', 'mask.nii'); 
+data_fn=fullfile(data_path,'4Dabeta_01.nii');
+ds=cosmo_fmri_dataset(data_fn,'mask',mask_fn,...
+                            'targets',1:188,'chunks',1);
+ ds_clean=cosmo_remove_useless_data(ds);
+ds_clean.sa.chunks(51:94,:)=2;
+ds_clean.sa.chunks(95:144,:)=3;
+ds_clean.sa.chunks(145:188,:)=4;
+a=ones(94,1);
+b=ones(94,1).*2;
+ ds_clean.sa.class=[a;b];
+cosmo_check_dataset(ds_clean);                              
+nvoxels_per_searchlight=125;
+nbrhood=cosmo_spherical_neighborhood(ds_clean,'count',nvoxels_per_searchlight);
+ nsamples=size(ds_clean.samples,1);
+target_dsm=zeros(nsamples);
+data_class=ds_clean.sa.class;
+for row=1:nsamples
+    for col=1:nsamples
+        same_data_class=data_class(row)==data_class(col);
+
+        if same_data_class
+            target_dsm(row,col)=0;
+        else
+            target_dsm(row,col)=1;
+        end
+    end
+end
+imagesc(target_dsm)
+measure=@cosmo_target_dsm_corr_measure;
+measure_args=struct();
+measure_args.target_dsm=target_dsm;
+measure_args.type='Spearman';
+cosmo_disp(measure);
+cosmo_disp(measure_args);                                        
+ ds_rsm_binary=cosmo_searchlight(ds_clean,nbrhood,measure,measure_args);
+ output_fn=fullfile(output_path,[char(subm),'_rsm_binary_full_lss.nii']);
+cosmo_map2fmri(ds_rsm_binary,output_fn);
+ds_rsm_binary.samples=atanh(ds_rsm_binary.samples);
+output_fn=fullfile(output_path,[char(subm),'_rsm_binary_full_lss_z.nii']);
+cosmo_map2fmri(ds_rsm_binary,output_fn);
+end
